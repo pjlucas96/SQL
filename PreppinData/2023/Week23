@@ -1,3 +1,4 @@
+// Creating a CTE before performing the resulting query
 with a as
 (
 select
