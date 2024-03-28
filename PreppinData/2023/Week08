@@ -1,0 +1,70 @@
+with unioned as 
+(select *, 'January' as date from "PD2023_WK08_01"
+union
+select *, 'Febuary' as date from "PD2023_WK08_02"
+union
+select *, 'March' as date from "PD2023_WK08_03"
+union
+select *, 'April' as date from "PD2023_WK08_04"
+union
+select *, 'May' as date from "PD2023_WK08_05"
+union
+select *, 'June' as date from "PD2023_WK08_06"
+union
+select *, 'July' as date from "PD2023_WK08_07"
+union
+select *, 'August' as date from "PD2023_WK08_08"
+union
+select *, 'September' as date from "PD2023_WK08_09"
+union
+select *, 'October' as date from "PD2023_WK08_10"
+union
+select *, 'November' as date from "PD2023_WK08_11"
+union
+select *, 'December' as date from "PD2023_WK08_12"),
+
+market as
+(select *,
+ cast(trim(market_cap, '$MB') as decimal(15,2)),
+case
+   when right(market_cap, 1) = 'M' then cast(trim(market_cap, '$M') as decimal(15,2))*1000000
+   when right(market_cap, 1) = 'B' then cast(trim(market_cap, '$B') as decimal(15,2))*1000000000
+ else cast(trim(market_cap, '$') as decimal(15,2))
+ end "Market Capitalisation"
+ from unioned
+ where market_cap != 'n/a'
+),
+
+t as (
+Select ID, first_name, last_name, ticker, sector, market, stock_name, "Market Capitalisation", trim(Purchase_price, '$') purchase_price,
+case
+    when replace(purchase_price, '$', '') < 25000 then 'Low'
+    when replace(purchase_price, '$', '') < 50000 then 'Medium'
+    when replace(purchase_price, '$', '') < 75000 then 'High'
+    else 'Very High'
+end "Purchase Price Categorisation",
+case
+    when "Market Capitalisation" < 100000000 then 'Small'
+    when "Market Capitalisation" < 1000000000 then 'Medium'
+    when "Market Capitalisation" < 100000000000 then 'Large'
+else 'Huge'
+end "Market Capitalisation Categorisation",    
+date,
+rank () over (partition by date, "Market Capitalisation Categorisation", "Purchase Price Categorisation" order by Purchase_price desc) rank
+from market
+  )
+  
+  select * from t where rank <= 5 and ticker = 'TTI';
+//where rank () over (partition by date, "Market Capitalisation", "Purchase Price Categorisation" order by Purchase_price desc) <= 5;
+
+
+//Below $100M as 'Small'
+//Between $100M and below $1B as 'Medium'
+//Between $1B and below $100B as 'Large' 
+//$100B and above as 'Huge'
+
+//
+//0 to 24,999.99 as 'Low'
+//25,000 to 49,999.99 as 'Medium'
+//50,000 to 74,999.99 as 'High'
+//75,000 to 100,000 as 'Very High'
