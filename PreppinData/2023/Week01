@@ -1,0 +1,11 @@
+// Challenge completed in Snowflake
+// https://preppindata.blogspot.com/2023/01/2023-week-1-data-source-bank.html
+
+select split_part(transaction_code, '-', 1) BANK, 
+dayname(to_date(transaction_date, 'DD/MM/YYYY HH:MI:SS')) as "Transaction Date",
+case 
+when online_or_in_person = 1 then 'Online'
+when online_or_in_person = 2 then 'In-Person'
+end as "Online or In-Person",
+sum(value) as value from PD2023_WK01
+group by 1,2,3;
