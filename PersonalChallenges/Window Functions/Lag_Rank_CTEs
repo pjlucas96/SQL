@@ -1,0 +1,44 @@
+/*
+Find the highest Order value for each month in 2020 and 2021.
+Calculate the difference between the highest order value (sales) for each month in 2021 to the highest order value for the same month in 2020.
+Note that some difference values will be negative, ensure you convert these to positive.
+Speak up if you need a hint.
+
+EXTENSION:
+Order the Months in 2021 by the difference calculated above and create a ranking calculation to rank them with the greatest increase in difference being rank 1.
+Your output for the extension should only contain the months of 2021.
+*/
+
+//Completed using Snowflake
+
+WITH orders AS (
+SELECT DATE_TRUNC(MONTH, ORDER_DATE) AS DT,
+ORDER_ID,
+SUM(SALES) AS SALES
+FROM superstore
+WHERE YEAR(ORDER_DATE) IN (2020,2021)
+GROUP BY 1, 2
+)
+,
+max_order AS (
+SELECT DT,
+MAX(SALES) AS MAX_ORDER_VALUE
+FROM orders
+GROUP BY 1
+)
+,
+difference AS (
+SELECT DT,
+MAX_ORDER_VALUE AS CURRENT_VALUE,
+LAG(MAX_ORDER_VALUE) OVER (PARTITION BY MONTH(DT) ORDER BY DT) AS PREV_VALUE,
+ABS(MAX_ORDER_VALUE - LAG(MAX_ORDER_VALUE) OVER (PARTITION BY MONTH(DT) ORDER BY DT)) AS DIFF
+FROM max_order
+ORDER BY MONTH(DT), YEAR(DT)
+)
+SELECT RANK() OVER (PARTITION BY YEAR(DT) ORDER BY DIFF DESC) AS RANK,
+DT,
+DIFF
+FROM difference
+WHERE DIFF IS NOT NULL
+ORDER BY DIFF DESC
+;
