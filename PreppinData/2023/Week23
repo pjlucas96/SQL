@@ -1,3 +1,6 @@
+// Completed using Snowflake
+// https://preppindata.blogspot.com/2023/06/2023-week-23-is-it-teacher-or-student.html
+
 // Creating a CTE before performing the resulting query
 with a as
 (
