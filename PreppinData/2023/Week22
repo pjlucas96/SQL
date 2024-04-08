@@ -1,0 +1,25 @@
+// Completed in Snowflake
+// https://preppindata.blogspot.com/2023/05/2023-week-22-student-attendance-vs-test.html
+
+select 
+case 
+    when af.attendance_percentage < 0.7 then 'Low Attendance'
+    when af.attendance_percentage > 0.9 then 'High Attendance'
+    else 'Medium Attendance'
+end Attendance_Flag,
+split_part(st.student_name, '_', 1) first_name,
+split_part(st.student_name, '_', 2) last_name,
+af.attendance_percentage,
+st.student_id,
+case
+    when st.subject like 'S%' then 'Science'
+    when st.subject like 'M%' then 'Math'
+    when st.subject like 'E%' then 'English'
+end subject,
+st.test_score,
+round(st.test_score, 0) test_score_integer
+from 
+PD2023_WK22_ATTENDANCE_FIGURES af
+join
+PD2023_WK22_STUDENT_TEST_SCORES st
+on af.student_name = st.student_name;
