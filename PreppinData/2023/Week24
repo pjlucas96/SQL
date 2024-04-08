@@ -1,3 +1,7 @@
+// Completed in Snowflake
+// https://preppindata.blogspot.com/2023/06/2023-week-24-is-it-teacher-or-student.html
+
+
 with a as
 (
   select
