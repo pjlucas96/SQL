@@ -1,0 +1,22 @@
+//Using Snowflake
+//Challenge - https://preppindata.blogspot.com/2021/01/2021-week-1.html
+
+USE DATABASE TIL_PLAYGROUND;
+USE SCHEMA DSUS_SQL_WORKSHOP;
+
+select order_id,
+customer_age,
+bike_value,
+existing_customer,
+quarter(date) quarter,
+dayofmonth(date) day_of_month,
+split_part(store_bike, ' - ', 1) store,
+CASE 
+    WHEN split_part(store_bike, ' - ', 2) LIKE 'M%' THEN 'Mountain'
+    WHEN split_part(store_bike, ' - ', 2) LIKE 'G%' THEN 'Gravel'
+    WHEN split_part(store_bike, ' - ', 2) LIKE 'R%' THEN 'Road'
+    ELSE 'BLANK'
+END bike
+from "PD2021_WK01"
+order by date
+limit null offset 10;
