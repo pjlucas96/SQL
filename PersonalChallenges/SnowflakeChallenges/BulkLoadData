@@ -1,0 +1,48 @@
+--CREATE THE STAGE TO BE USED
+CREATE OR REPLACE stage "my_stage1"
+    URL = 's3://til-tableaudemo-tableau/pp-complete.txt'
+    CREDENTIALS = (AWS_KEY_ID='...'
+                   AWS_SECRET_KEY='key');
+-- These keys tell Snowflake that you have access to the specific S3 Bucket in AWS and the data within it.
+
+--CREATE THE TABLE TO PUT THE DATA INTO
+--Optimise storage usage by setting correct data types
+--Optimise use by naming columns sensibly
+create table the_effect_table(
+    transaction_id varchar(50),
+    price int,
+    transaction_date datetime,
+    postcode varchar(10),
+    property_type varchar(1),
+    yes_no varchar(1),
+    holdtype text(1),
+    primary_property_name varchar(30),
+    secondary_property_name varchar(30),
+    street varchar(40),
+    village varchar(30),
+    town varchar(30),
+    borough varchar(30),
+    county varchar(30),
+    a_b varchar(1),
+    a varchar(1));
+
+--VIEW YOUR STAGE, TABLE, FILE FORMATS
+SHOW STAGES;
+SHOW TABLES;
+SHOW FILE FORMATS;
+
+--CREATE YOUR FILE FORMAT - this isn't necessarily required but because of the format of the data, it was required.
+CREATE OR REPLACE FILE FORMAT MY_CSV_FORMAT
+                      TYPE =  'CSV'
+                      FIELD_DELIMITER = ","
+                      FIELD_OPTIONALLY_ENCLOSED_BY = '"';
+
+--COPY DATA INTO THE TABLE
+COPY INTO the_effect_table
+    FROM @"my_stage1"
+    FILE_FORMAT = (FORMAT_NAME = MY_CSV_FORMAT) -- specifying the created file format instead of a standard format.
+    on_error = CONTINUE;
+    
+--RUN A COMMAND ON YOUR TABLE
+select * from the_effect_table
+    limit 10;
