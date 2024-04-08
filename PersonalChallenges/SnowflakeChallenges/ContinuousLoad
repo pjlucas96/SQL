@@ -1,0 +1,33 @@
+CREATE OR REPLACE STORAGE INTEGRATION VIZQL_Storage_Integration -- Overall this authorises Snowflake's access to the S3 bucket
+TYPE = EXTERNAL_STAGE -- an external stage since its reference data in AWS
+STORAGE_PROVIDER = S3 -- S3 within AWS is where the bucket is stored
+ENABLED = TRUE
+STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::192699161875:role/DS22Role' -- this is the ARN (Amazon Resource Name) of the role you created
+STORAGE_ALLOWED_LOCATIONS = ('s3://til-tableau-server-vizql-logs/2021/'); -- this is the name of the bucket alongside the path to the files we want to ingest
+
+DESC INTEGRATION VIZQL_Storage_Integration; -- describe the created storage integration in order to get the specific user ARN and external ID needed to establish the trusted relationship
+-- The results of this are used to edit the Trust Relationship for the IAM role in AWS.
+
+
+CREATE OR REPLACE stage "VIZQL_Stage"
+URL = 's3://til-tableau-server-vizql-logs/2021/' -- this is the name of the bucket alongside the path to the files we want to ingest
+storage_integration = VIZQL_Storage_Integration; -- calling the storage location
+
+SHOW STAGES;
+
+CREATE OR REPLACE TABLE VIZQL_Table( -- just creating one column since I know the data is in JSON format.
+column1 object -- We can create a view to parse the data into a more readable format.
+);
+
+CREATE OR REPLACE PIPE "TIL_DATASCHOOL"."DS22".VIZQL_Pipe 
+auto_ingest = true AS
+COPY INTO "TIL_DATASCHOOL"."DS22"."VIZQL_TABLE"
+FROM @"VIZQL_Stage"
+on_error = CONTINUE
+file_format = (type = 'JSON');
+
+SHOW PIPES;
+
+ls @"VIZQL_Stage";
+
+SELECT * FROM "TIL_DATASCHOOL"."DS22"."VIZQL_TABLE";
