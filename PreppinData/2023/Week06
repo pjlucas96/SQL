@@ -1,0 +1,29 @@
+// Completed in Snowflake
+// https://preppindata.blogspot.com/2023/02/2023-week-6-dsb-customer-ratings.html
+
+with a as 
+(
+select customer_id,
+AVG(mobile_app_value) avg_mobile,
+AVG(online_interface_value) avg_online,
+AVG(mobile_app_value) - AVG(online_interface_value) difference_in_avg_rating,
+  case
+        when difference_in_avg_rating <= -2 then 'Online Interface Superfan'
+        when difference_in_avg_rating <= -1 then 'Online Interface Fan'
+        when difference_in_avg_rating > -1 and difference_in_avg_rating < 1 then 'Neutral'
+        when difference_in_avg_rating >= 2 then 'Mobile App Superfan'
+        when difference_in_avg_rating >= 1 then 'Mobile App Fan'
+//        else 'Neutral' ---- this also works instead of the middle line for neutral
+  end Preference
+from "PD2023_WK06_DSB_CUSTOMER_SURVEY"
+UNPIVOT(mobile_app_value for mobile_app IN (MOBILE_APP___EASE_OF_USE, MOBILE_APP___EASE_OF_ACCESS, MOBILE_APP___NAVIGATION, MOBILE_APP___LIKELIHOOD_TO_RECOMMEND, MOBILE_APP___OVERALL_RATING))
+UNPIVOT(online_interface_value for online_interface IN (ONLINE_INTERFACE___EASE_OF_USE, ONLINE_INTERFACE___EASE_OF_ACCESS, ONLINE_INTERFACE___NAVIGATION, ONLINE_INTERFACE___LIKELIHOOD_TO_RECOMMEND, ONLINE_INTERFACE___OVERALL_RATING))
+where split_part(mobile_app, '___', 2) = split_part(online_interface, '___', 2)
+and split_part(mobile_app, '___', 2) != 'OVERALL_RATING'
+group by 1
+)
+
+select a.Preference, 
+round(100 * RATIO_TO_REPORT(count(a.preference)) OVER (),1) AS perc_of_Total 
+from a 
+group by 1;
