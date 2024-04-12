@@ -1,0 +1,56 @@
+/*
+Using Tableau's in-house-built Superstore dataset.
+Exercise found at the following
+https://docs.google.com/presentation/d/1dyKHI00RtCecXt7Z9uJF5WrBp8-lfRN5QIpwnAjS62M/edit?usp=sharing
+
+Task:
+ - Find the Monthly % of total orders returned.
+    - Which month shows the highest and lowest % of returned orders.
+ - Find the running monthly total number of orders returned.
+*/
+
+// Create a CTE for all orders, including whether they have been returned or not.
+WITH CTE AS (
+SELECT DATE_TRUNC(MONTH, S.ORDER_DATE) AS MONTH,
+S.ORDER_ID,
+CASE
+    WHEN R.ORDER_ID IS NULL THEN 'N'
+    ELSE 'Y'
+END AS RETURNED
+FROM SUPERSTORE S
+LEFT JOIN
+(SELECT DISTINCT ORDER_ID 
+FROM RETURNED) R
+ON S.ORDER_ID = R.ORDER_ID
+)
+,
+// Create a CTE to count the number of orders that have been returned or not for each month
+YN AS (
+SELECT MONTH, 
+RETURNED,
+COUNT(DISTINCT ORDER_ID) AS CNT
+FROM CTE
+GROUP BY 1,2
+ORDER BY 1,2
+)
+,
+// Create a CTE to count the total number of orders for each month - could have done this using a sub-query in the first CTE
+TOTAL AS (
+SELECT MONTH,
+COUNT(DISTINCT ORDER_ID) AS TCNT
+FROM 
+CTE
+GROUP BY 1
+ORDER BY 1
+)
+// Join the YN and TOTAL CTEs to enable the calculation for the percent of total and filter to returned only to calculate the running SUM.
+SELECT TOTAL.MONTH,
+YN.CNT,
+TOTAL.TCNT,
+ROUND(100 * (CNT / TCNT), 2) AS PERC_OF_TOTAL,
+SUM(CNT) OVER (ORDER BY TOTAL.MONTH) AS RUNNING_TOTAL
+FROM TOTAL
+JOIN
+YN
+ON TOTAL.MONTH = YN.MONTH
+WHERE YN.RETURNED = 'Y';
